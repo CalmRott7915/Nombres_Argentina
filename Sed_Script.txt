@@ -1,0 +1,77 @@
+# Reemplaza los tildes invertidos, algunas mayúsculas extranjeras por minúsculas y otras por caracteres españoles acentuados.
+y/àèìòùÀÈÌÒÙÃÕÄËÖÇØêÏÂÊÎÔÛÅ/áéíóúÁÉÍÓÚãõäëöçøéíáéíóúá/
+
+# Reemplaza códigos que vienen de CP850 a Unicode
+
+    # Letra e, está importado de una forma extraña hay veces que el código c282 está sólo y otras precedidas por "e" o "é"
+    s/[ée]\?\xC2\x82/é/g
+
+    # Letra a, es la más compleja, hay veces que está sóla, otras está la "a" o la "á" seguida del código c2a0, y otras hay una letra más en el medio, pero donde el c2a0 hace las veces de espacio con la palabra siguiente. Así y todo, quedan dos casos especiales que hay que solucionar hardcoded.
+
+    s/[áa]\(.\)\?\xc2\xa0/á\1 /g
+    s/\xc2\xa0/á/g
+    s/Má x/Máx/
+    s/Bá rbara/Bárbara/
+
+    # í, ó y ú son más directos.
+    s/\xc2\xa1/í/g
+    s/\xc2\xa2/ó/g
+    s/\xc2\xa3/ú/g
+
+    # la ñ está también complicada. El código importado c2a4 a veces reemplaza a una "á" terminada en "an". También en Cármen, Nicolás o Jonás. El resto es ñ o errores de tipeo que no se van a corregir. Los regex de abajo lo hace más o menos bien y dejan un error donde es error.
+    s/\xC2\xa4n/án/g
+    s/C\xC2\xa4rmen/Cármen/g
+    s/\xC2\xa4s/ás/g
+    s/\xC2\xa4/ñ/g
+
+# Elimina las barra vertical, el nombre 2° y el ° o º (sí, hay dos)
+s/|\|2\?[°º]//g
+
+# Todos los apóstrofes como ' y elimina los repetidos y los que están al comienzo o al final antes de la coma
+s/[`´]/'/g
+s/'\{2,\}/'/g
+s/^'//
+s/',/,/
+
+# Elimina los "Sale Observado" y "Numeracion Pendiente" y otras
+s/[sS]ale Observado//g
+s/Numeracion Pendiente//g
+s/[Ff]allecido[^,]*,/,/
+s/[pP]resunto[^,]*,/,/
+
+# Elimina todo lo que esté entre paréntesis y entre la apertura de un paréntesis y la primera coma.
+s/([^,]*)//g
+s/([^,]*,/,/g
+
+# Reemplaza 2 o más espacios por uno sólo
+s/[[:space:]]\{2,\}/ /g
+
+# Guión bajo por espacio y guiones intermedios sin espacios a los costados
+s/_/ /g
+s/ - /-/g
+s/ -\|- /-/g
+
+# Elimina las comillas, y las comas entre las comillas
+s/"\([^,]*\),\([^,]*\)"/\1 \2/g
+s/"//g
+
+# Elimina espacios antes de las comas
+s/[[:space:]]\+,/,/g
+
+# Elimina los espacios después de las comas
+s/,[[:space:]]\+/,/g
+
+# Elimina todos los puntos y los nombres que quedan de una letra
+s/\.\+//g
+s/ [a-zA-Z] / /g
+
+# Elimina los espacios al comienzo de la línea y al final de una línea
+s/^[[:space:]]\+//
+s/[[:space:]]\+$//
+
+# Elimina la línea que no tenga texto antes de la coma
+/^[^a-zA-Z[:space:]áéíóúÁÉÍÓÚñÑüÜçäëïöãõôâîûý]\+,/d
+
+
+# Elimina cualquier símbolo que no sea una letra al comienzo
+s/^[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜçäëïöãõôâîûý]\+\(.*\)/\1/

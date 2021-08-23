@@ -1,0 +1,10 @@
+BEGIN {
+    print "Nombre,n,y" > "Nombres-Limpio.csv";
+}
+
+NR > 1 {
+if ($0 !~ /^[a-zA-Z[:space:]áéíóúÁÉÍÓÚñÑüÜçäëïöãõôøâîûý\-']+,[[:digit:]]+,[[:digit:]]{4}$/)
+    print $0 >> "Nombres-Problema.csv";
+else
+    print $0 >> "Nombres-Limpio.csv";
+}

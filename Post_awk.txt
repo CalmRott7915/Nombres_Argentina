@@ -1,0 +1,27 @@
+# Fields are separated by space and comma
+BEGIN {
+    FS="[ ,]+";
+    print "ID,Nombre,N,Yr" > "Nombres_Completos.csv"
+    print "ID,Nombre,N,Yr" > "Nombres_Simples.csv"
+}
+
+# Change everyname to First Letter Uppercase and Lower Case the following letters
+# Add a Record Number as the first field
+
+NR > 1 {
+    for (i=1; i<=(NF-2);i++){
+        $(i) = toupper(substr($(i),1,1)) tolower(substr($(i),2))
+        Nombre = Nombre $(i) " ";
+    };
+    Nombre = "";
+    for (i=1; i<=(NF-3);i++){
+        Nombre = Nombre $(i) " ";
+    };
+    Nombre = Nombre $(NF-2);
+    print NR "," Nombre "," $(NF-1) "," $NF >> "Nombres_Completos.csv"
+    for (i=1; i<=(NF-2);i++){
+        print NR "," $(i) "," $(NF-1) "," $NF >> "Nombres_Simples.csv";
+    };
+
+}
+
