@@ -1,3 +1,10 @@
+# This script is intended to correct errors in a name dataset from the Argentinian Goverment
+# https://datos.gob.ar/dataset/otros-nombres-personas-fisicas
+# BSD 3-Clause License
+# Copyright (c) 2021, CalmRott7915 (a pseudonym, author can be reached on Reddit under u/CalmRott7915 or on Github)
+# Redistributions of source code must retain the above copyright notice and the attached BSD-3 Licence
+
+
 # Reemplaza los tildes invertidos, algunas mayúsculas extranjeras por minúsculas y otras por caracteres españoles acentuados.
 y/àèìòùÀÈÌÒÙÃÕÄËÖÇØêÏÂÊÎÔÛÅ/áéíóúÁÉÍÓÚãõäëöçøéíáéíóúá/
 

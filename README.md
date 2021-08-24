@@ -17,7 +17,7 @@ Es un dataset de más de nueve millones de registro. No entra en un Excel, defin
 
 ## Uso.
 
-Éstos scripts fueron desarrolados con las utilidades de Ubuntu en Windows Subsystem for Linux. No están probados en ninguna otra distribución.
+Ésto fue desarrolado con las utilidades de Ubuntu en Windows Subsystem for Linux. No están probados en ninguna otra distribución.
 
 1) Clonar el repositorio (o bajarlo)
 2) Bajar una copia del dataset del sitio del Gobierno y descomprimirla. Es un archivo csv llamado "historico-nombres.csv"
@@ -60,28 +60,37 @@ Durante el desarrollo, aparecieron otros problemas que no son evidentes desde la
 - Registros que tienen comentarios, como por ejemplo "sale observado" ó "falta numeración"
 - Datos traidos de sistemas con codificación diferente (posiblente CP850) pero que se tradujeron directamente como code points de Unicode.
 - Tildes invertidas como "Josè" ó "Agustìn". Posiblemente de un teclado configurado para español de España.
+- Hay alguna evidencia de que hay datos duplicados e inconsistencias año a año. Esto no es posible de resolver sin saber cuales fueron las fuentes de datos originales utilizadas en el dataset. Hay que tener precaución al hacer comparaciones entre años. La evolucion del total de nombres inscriptos no es compatible con la evolución de la natalidad en Argentina (ver gráfico), y además existen entradas como por ejemplo "Jonathan Ogheneochuko Chukwuza Ekpelem Nkemcho" en 2005 que aparecen 4 veces. Si bien es posible, es improbable que 4 familias nigerianas hayan tenido un nacimiento de un varón en 2005 y las cuatro familia hayan decidido ponerle exactamente ese nombre.
+
+
+![NumeroInscriptos.png](./NumeroInscriptos.png)
+
 
 
 ## La motivación para hacer esto
 
-Estoy aprendiendo R, y quería utilizar en dataset de alguna magnitud que tuviera algunos desafíos.
-
-Finalmente, terminé utilizando otras herramientas más clásicas como sed and awk para hacerla manipulación inicial y limpieza de los datos.
+Ya pasé de lo básico de R, y buscaba utilizar un dataset de alguna magnitud que tuviera algunos desafíos. Y éste vino muy bien. Hacer que ande a una velocidad razonable con 9 millones de registros llevó varias iteraciones. Desde R base, pasando por tidyverse para terminar decandando por data.table. De tenerlo una noche completa sin que termine de procesar, a poder hacerlo en pocos segundos
 
 
 Y... una vez que está funcionando, es interesante ver cómo la tendencia de algunos nombres va reflejando los hechos de la Argentina.
 
-Por ejemplo, abajo vemos la evolución del nombre "Samanta", un nombre que fue popular hasta 1996 cuando cae abruptamente...para los más viejitos con memoria de lo que pasó en esa época.
+Por ejemplo, abajo está la evolución del nombre "Samanta", un nombre que fue popular hasta 1996 cuando cae abruptamente...para los más viejitos con memoria de lo que pasó en esa época.
 
-También son muy notables los picos de popularidad de Juan Domingo, Raúl Ricardo o Carlos Saúl  y contrastando con eso, el poco impacto de los políticos en los nombres de recien nacidos después del año 2000.
+También son muy notables los picos de popularidad de Juan Domingo, Raúl Ricardo o Carlos Saúl y, contrastando con eso, el poco impacto de los políticos en los nombres de recien nacidos después del año 2000.
 
 ![Samanta.png](./Samanta.png)
+
+![RaulRicardo.png](./RaulRicardo.png)
+
+![CristinaNestor.png](./CristinaNestor.png)
 
 
 # Cómo sigue
 
-Mi objetivo final es hacer una aplicación Shiny donde puedan poner el nombre de sus compañeros de escuela y les diga qué probabilidad hay que sean de una determinada clase (Julio de un año hasta Junio del siguiente) usando aguna inferencia Bayesiana. Contribuciones, ayuda, sugerencia para mejorar el código, etc, más que bienvenidas.
+El objetivo final es  una aplicación Shiny donde se pueda poner el nombre de sus compañeros de escuela y les diga qué probabilidad hay que sean de una determinada clase (Julio de un año hasta Junio del siguiente) usando inferencia Bayesiana.
 
-Es libre para usarlo como quieran, el único pedido es que si lo úsan me den crédito donde lo usen.
+Contribuciones, ayudas, ideas y sugerencias para mejorar el código, etc, más que bienvenidas.
+
+Es libre para usarlo como quieran, el único pedido es que si lo usan mantengan los créditos.
 
 Por comentarios, sugerencias o lo que sea. Por aquí, o por pm en Reddit al usuario u/CalmRott7915
