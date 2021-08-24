@@ -4,7 +4,7 @@ El Gobierno de la Nación Argentina en su programa de Datos Abiertos y mediante 
 
 https://nombres.datos.gob.ar/
 
-También hay un link al conjunto de datos con la que se alimenta la página
+También hay un link al conjunto de datos con el que se alimenta la página
 
 En la página
 https://datos.gob.ar/dataset/otros-nombres-personas-fisicas
@@ -12,12 +12,10 @@ https://datos.gob.ar/dataset/otros-nombres-personas-fisicas
 Directamente el Dataset
 https://infra.datos.gob.ar/catalog/otros/dataset/2/distribution/2.1/download/historico-nombres.zip
 
-Es un dataset de más de nueve millones de registro. No entra en un Excel, definitivamene. :smile:
+Es un dataset de más de nueve millones de registros. Definitivamente, no entra en un Excel. :smile:
 
 
 ## Uso.
-
-Ésto fue desarrolado con las utilidades de Ubuntu en Windows Subsystem for Linux. No están probados en ninguna otra distribución.
 
 1) Clonar el repositorio (o bajarlo)
 2) Bajar una copia del dataset del sitio del Gobierno y descomprimirla. Es un archivo csv llamado "historico-nombres.csv"
@@ -45,9 +43,12 @@ Demora unos minutos. Son varias sustituciones con expresiones regulares sobre m�
 Ya estamos en condiciones de importar los datos a R y comenzar a hacer algunas cosas. En el archivo "Nombres.r" hay varios ejemplos de uso.
 
 
+Nota: ésto fue desarrolado con las utilidades de Ubuntu en Windows Subsystem for Linux. No están probados en ninguna otra distribución.
+
+
 ## Problemas del Sitio y los Datos
 
-Uno de los problemas del sitio del Gobierno es que la búsqueda es de nombres completos es decir, si uno busca "Juán" muestra la cantidad de personas que se inscribieron como "Juán" a secas. No cuentan los "Juán Carlos" ó los "Juán José". Se ve que:
+Uno de los problemas del sitio del Gobierno es que la búsqueda es por nombres completos.  Si uno busca "Juán" muestra la cantidad de personas que se inscribieron como "Juán" a secas. No cuentan los "Juán Carlos" ó los "Juán José".
 
 - Juán: 44756 personas desde 1922 a 2015
 - Juán Carlos: 290266 personas en el mismo período
@@ -57,10 +58,10 @@ También hay problemas con las búsquedas de algunos nombres como por ejemplo "D
 
 Durante el desarrollo, aparecieron otros problemas que no son evidentes desde la aplicación web:
 
-- Registros que tienen comentarios, como por ejemplo "sale observado" ó "falta numeración"
+- Registros que tienen comentarios del estilo "sale observado" ó "falta numeración"
 - Datos traidos de sistemas con codificación diferente (posiblente CP850) pero que se tradujeron directamente como code points de Unicode.
 - Tildes invertidas como "Josè" ó "Agustìn". Posiblemente de un teclado configurado para español de España.
-- Hay alguna evidencia de que hay datos duplicados e inconsistencias año a año. Esto no es posible de resolver sin saber cuales fueron las fuentes de datos originales utilizadas en el dataset. Hay que tener precaución al hacer comparaciones entre años. La evolucion del total de nombres inscriptos no es compatible con la evolución de la natalidad en Argentina (ver gráfico), y además existen entradas como por ejemplo "Jonathan Ogheneochuko Chukwuza Ekpelem Nkemcho" en 2005 que aparecen 4 veces. Si bien es posible, es improbable que 4 familias nigerianas hayan tenido un nacimiento de un varón en 2005 y las cuatro familia hayan decidido ponerle exactamente ese nombre.
+- Hay alguna evidencia de que hay datos duplicados e inconsistencias año a año. Esto no es posible de resolver sin saber cuales fueron las fuentes de datos originales utilizadas en el dataset. Hay que tener precaución al hacer comparaciones entre años. La evolucion del total de nombres inscriptos no es compatible con la evolución de la natalidad en Argentina (ver gráfico), y además existen entradas raras como  "Jonathan Ogheneochuko Chukwuza Ekpelem Nkemcho" en 2005 que aparecen 4 veces. Si bien es posibleque 4 familias nigerianas hayan tenido un nacimiento de un varón en 2005 y las cuatro familia hayan decidido ponerle exactamente ese nombre, es bastante improbable.
 
 
 ![NumeroInscriptos.png](./Imagenes/NumeroInscriptos.png)
@@ -87,7 +88,7 @@ También son muy notables los picos de popularidad de Juan Domingo, Raúl Ricard
 
 # Cómo sigue
 
-El objetivo final es  una aplicación Shiny donde se pueda poner el nombre de sus compañeros de escuela y les diga qué probabilidad hay que sean de una determinada clase (Julio de un año hasta Junio del siguiente) usando inferencia Bayesiana.
+El objetivo final es  una aplicación Shiny donde se pueda poner el nombre de los compañeros de escuela y devuelva qué probabilidad hay de que sean de una determinada clase (Julio de un año hasta Junio del siguiente) usando inferencia Bayesiana.
 
 Contribuciones, ayudas, ideas y sugerencias para mejorar el código, etc, más que bienvenidas.
 
