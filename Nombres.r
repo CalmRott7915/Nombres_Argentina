@@ -18,14 +18,15 @@ setkey(NC,ID)
 
 
 # Un conjunto de nombres (Cualquiera)
-ListaNombres=c("Kevin","Brian","Johnatan","Jonatan","Bryan")
+ListaNombres=c("Samanta","Samantha")
 A <- NS[ListaNombres,.(Total=sum(N)),Yr]
 
 #Plot
 G <- ggplot(A)+
-  geom_point(aes(x=Yr, y=Total))+
-  geom_smooth(aes(x=Yr,y=Total),span=0.07,se=FALSE)+
+  geom_point(aes(x=Yr, y=Total),color="red",size=2)+
+  geom_line(aes(x=Yr,y=Total),color="blue",size=1)+
   theme_light()+
+  scale_x_continuous(breaks=seq(1920,2020,10))+
   labs(x="Año",y="Total",
        title=paste("Evolución de los Nombres: ", paste(ListaNombres,collapse="/"),sep=""))
 plot(G)
@@ -45,7 +46,7 @@ G <- ggplot(B)+
 plot(G)
 
 
-# Tanto los nombres de A como de B en uno sólo
+# Alguno de los nombres de A con Alguno de B
 A <- c("Raul","Raúl")
 B <- c("Ricardo")
 AN <- NS[A]
