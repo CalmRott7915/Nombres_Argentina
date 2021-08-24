@@ -63,7 +63,7 @@ Durante el desarrollo, aparecieron otros problemas que no son evidentes desde la
 - Hay alguna evidencia de que hay datos duplicados e inconsistencias año a año. Esto no es posible de resolver sin saber cuales fueron las fuentes de datos originales utilizadas en el dataset. Hay que tener precaución al hacer comparaciones entre años. La evolucion del total de nombres inscriptos no es compatible con la evolución de la natalidad en Argentina (ver gráfico), y además existen entradas como por ejemplo "Jonathan Ogheneochuko Chukwuza Ekpelem Nkemcho" en 2005 que aparecen 4 veces. Si bien es posible, es improbable que 4 familias nigerianas hayan tenido un nacimiento de un varón en 2005 y las cuatro familia hayan decidido ponerle exactamente ese nombre.
 
 
-![NumeroInscriptos.png](./NumeroInscriptos.png)
+![NumeroInscriptos.png](./Imagenes/NumeroInscriptos.png)
 
 
 
@@ -74,15 +74,15 @@ Ya pasé de lo básico de R, y buscaba utilizar un dataset de alguna magnitud qu
 
 Y... una vez que está funcionando, es interesante ver cómo la tendencia de algunos nombres va reflejando los hechos de la Argentina.
 
-Por ejemplo, abajo está la evolución del nombre "Samanta", un nombre que fue popular hasta 1996 cuando cae abruptamente...para los más viejitos con memoria de lo que pasó en esa época.
+Por ejemplo, abajo está la evolución del nombre "Samanta", un nombre que fue popular hasta 1996 cuando cae abruptamente...
 
-También son muy notables los picos de popularidad de Juan Domingo, Raúl Ricardo o Carlos Saúl y, contrastando con eso, el poco impacto de los políticos en los nombres de recien nacidos después del año 2000.
+También son muy notables los picos de popularidad de Juan Domingo, Raúl Ricardo o Carlos Saúl y, contrastando con eso, el poco impacto de los principales políticos en los nombres elegidos para los recién nacidos después del año 2000.
 
-![Samanta.png](./Samanta.png)
+![Samanta.png](./Imagenes/Samanta.png)
 
-![RaulRicardo.png](./RaulRicardo.png)
+![RaulRicardo.png](./Imagenes/RaulRicardo.png)
 
-![CristinaNestor.png](./CristinaNestor.png)
+![CristinaNestor.png](./Imagenes/CristinaNestor.png)
 
 
 # Cómo sigue
