@@ -28,16 +28,30 @@ setkey(NC,ID)
 
 ListaNombres=c("Samanta","Samantha")
 
-A <- NS[ListaNombres,.(Total=sum(N)),Yr]
+AN <- NS[ListaNombres]
+A <- AN[,.(Total=sum(N)),Yr]
+
+CN <- NC[J(AN$ID),.(N = sum(N)),by=Nombre]
+CN <- setorder(CN,-N)
 
 #Plot
+Caption <- paste(head(CN,15)[,Nombre], collapse=", ")
+Caption <- strwrap(Caption,width=80)
+Caption <- paste(Caption, collapse = "\n")
+Caption <- paste("Mas Populares:\n", Caption,sep="")
+
+Title <- paste("Evolución de los Nombres: ", paste(paste(ListaNombres,collapse=" o ")),sep="")
+
 G <- ggplot(A)+
   geom_point(aes(x=Yr, y=Total),color="red",size=2)+
   geom_line(aes(x=Yr,y=Total),color="blue",size=1)+
   theme_minimal()+
   scale_x_continuous(breaks=seq(1920,2020,10))+
-  labs(x="Año",y="Total",
-       title=paste("Evolución de los Nombres: ", paste(ListaNombres,collapse="/"),sep=""))
+  theme(plot.caption = element_text(hjust=0)) +
+  labs(x="Año",
+       y="Total",
+       title=Title,
+       caption=Caption)
 plot(G)
 
 
@@ -53,7 +67,8 @@ G <- ggplot(B)+
   theme_minimal()+
   scale_x_continuous(breaks=seq(1920,2020,10))+
   labs(x="Año",y="Total",
-       title=paste("Evolución de los Nombres: ", paste(ListaNombres,collapse="/"),sep=""))
+       title=paste("Evolución de los Nombres: ", 
+                   paste(ListaNombres,collapse="/"),sep=""))
 plot(G)
 
 
@@ -80,7 +95,7 @@ D <- C[,.(Total=sum(N.x)),.(Yr=Yr.x)]
 Caption <- paste(head(CN,15)[,Nombre], collapse=", ")
 Caption <- strwrap(Caption,width=80)
 Caption <- paste(Caption, collapse = "\n")
-Caption <- paste("Mas Populares:\n", Caption)
+Caption <- paste("Mas Populares:\n", Caption,sep="")
 
 Title <- paste("Evolución de los Nombres: ", 
                paste(paste(A,collapse=" o "),
@@ -101,7 +116,7 @@ plot(G)
 
 
 # 20 Nombres más populares de un  año ####
-Año = 1970
+Año = 2000
 NCi <- NS[Yr==Año,.(Total=sum(N)),by=Nombre]
 NCi <- setorder(NCi,-Total)[1:20,]
 
