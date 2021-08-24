@@ -1,4 +1,6 @@
 # Fields are separated by space and comma
+# So field 1 to NF-2 are names, NF-1 is number of occurrences and NF is year
+
 BEGIN {
     FS="[ ,]+";
     print "ID,Nombre,N,Yr" > "Nombres_Completos.csv"
@@ -9,15 +11,20 @@ BEGIN {
 # Add a Record Number as the first field
 
 NR > 1 {
+
+    # Names to correct Case
     for (i=1; i<=(NF-2);i++){
-        $(i) = toupper(substr($(i),1,1)) tolower(substr($(i),2))
-        Nombre = Nombre $(i) " ";
+        $(i) = toupper(substr($(i),1,1)) tolower(substr($(i),2));
     };
+
     Nombre = "";
     for (i=1; i<=(NF-3);i++){
         Nombre = Nombre $(i) " ";
     };
+    #The last one without space after it.
     Nombre = Nombre $(NF-2);
+
+
     print NR "," Nombre "," $(NF-1) "," $NF >> "Nombres_Completos.csv"
     for (i=1; i<=(NF-2);i++){
         print NR "," $(i) "," $(NF-1) "," $NF >> "Nombres_Simples.csv";
