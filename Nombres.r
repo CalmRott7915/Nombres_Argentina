@@ -23,9 +23,21 @@ NS <- fread("Nombres_Simples.csv",
 setkey(NS, Nombre)
 setkey(NC,ID)
 
-# Agregado de nombres aimples año a año y luego ordenados por frecuencia descendente
-NSy <- NS[,.(Total=sum(N)),by="Nombre,Yr"]
-setorder(NSy,Yr,-Total)
+###################################################
+# Variables comunes a varios ejemplos             #
+###################################################
+
+# Total de Inscriptos en un año
+TI <- NC[,.(YrTotal=sum(N)),keyby=Yr]     
+
+# Partes por millón de Nombres simples
+NSp <- NS[,.(NameYrTotal=sum(N)),keyby="Nombre,Yr"]
+NSp[,`:=`(ppm = NameYrTotal*1e6/TI[J(NSp[,Yr]),YrTotal],
+          YrTotal =TI[J(NSp[,Yr]),YrTotal])]
+
+# Partes por millón de Nombres Completos
+NC[,ppm:=N*1e6/TI[J(NC[,Yr]),YrTotal]]
+
 
 #####################################################
 # Un Conjunto de Nombres Simples (Suma de Todos) ####
@@ -60,6 +72,9 @@ G <- ggplot(A)+
        caption=Caption)
 plot(G)
 
+# Limpieza
+rm(A,AN,CN,ListaNombres)
+
 
 #####################################################
 # Un Conjunto de Nombres Exactos (Suma de Todos) ####
@@ -78,6 +93,10 @@ G <- ggplot(B)+
        title=paste("Evolución de los Nombres: ", 
                    paste(ListaNombres,collapse="/"),sep=""))
 plot(G)
+
+#Limpieza
+rm(ListaNombres,B)
+
 
 #############################################################################
 # Nombres completos que contengan uno o más nombres de A y uno o más de B####
@@ -123,26 +142,40 @@ G <- ggplot(D)+
        caption=Caption)
 plot(G)
 
+# Limpieza
+rm (A, AN, B, BN, C, CN, D, Caption, Title)
+
 ##########################################
 # 20 Nombres más populares de un  año ####
 ##########################################
 
 Año = 1997
-NCi <- NS[Yr==Año,.(Total=sum(N)),by=Nombre]
-NCi <- setorder(NCi,-Total)[1:20,]
+NCi <- NSp[Yr==Año]
+NCi <- setorder(NCi,-NameYrTotal)[1:20,]
 # Exportar sacando comentario de abajo
 # write.csv(NCi, file = Popular20Yr.csv, row.names=FALSE,fileEncoding = "UTF-8")
 
+G <- ggplot(NCi)+
+  geom_bar(aes(x=reorder(Nombre,-NameYrTotal),
+               y=NameYrTotal,
+               fill=NameYrTotal),
+           stat="identity")+
+  labs(x="Nombre", y="Cantidad",
+         title=paste("20 Nombres más populares del año ",Año,sep=""))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
+plot(G)
+  
+rm(Año, NCi)
 
 
 ###########################
 #  Total de Inscriptos ####
 ###########################
 
-TI <- NC[,.(Total=sum(N)),keyby=Yr]     
 G <- ggplot(TI) + 
-    geom_point(aes(x=Yr,y=Total/1e6))+
-    geom_line(aes(x=Yr,y=Total/1e6))+
+    geom_point(aes(x=Yr,y=YrTotal/1e6))+
+    geom_line(aes(x=Yr,y=YrTotal/1e6))+
     theme_minimal()+
     labs(title="Número de nombres inscriptos por año",
            x="Año",
@@ -151,27 +184,20 @@ G <- ggplot(TI) +
 plot(G)
 
 
-##################################################
-# X Nombres simples más populares de cada año ####
-##################################################
+##########################################################
+# Función X Nombres simples más populares de cada año ####
+##########################################################
 
 PopularX <- function(N_Popular, exclude=c("Del","Los","De")){
   
-    NSp <- NSy[,first(.SD,N_Popular),by=Yr]
+    # Selección de los 20 mayores de cada año que no estén en los excluidos  
+    XPop <- NSp[!Nombre%in%exclude,
+                last(.SD[order(NameYrTotal)],N_Popular),
+                by=Yr]
 
     # Se recalculan todos los que algunas vez fueron top de un año para todos los años
-    
-    #La siguiente línea estás convolucionada pero es sólo tener la lista ordenada de nombres que
-    #no incluya "Del, "Los" y "De"
-    Populares <-NSp[!Nombre%in%exclude,Nombre,keyby=Nombre][,1][,Nombre] 
-      
-    # Y poner dos  columnas con el total un nombre y el total de inscriptos en cada año
-    NSp <- NSy[Nombre%in%Populares]
-    Years <- NSp[,Yr]
-    NSp[,`:=`(YrTotal=TI[.(Years),Total])]
-
-    # Luego a ppm para hacerlos comparables a traves del tiempo  
-    NSp[,ppm:=Total/YrTotal*1e6]
+    XPop <- NSp[Nombre%chin%XPop[,Nombre]]
+        
 }
     
     
@@ -179,8 +205,10 @@ PopularX <- function(N_Popular, exclude=c("Del","Los","De")){
 ############################################################    
 # Tabla de 20 Nombres Más Populares por año para exportar  #
 ############################################################
-NCtw <- dcast(PopularX(20),Yr~Nombre,value.var="Total", fill=0)
+# NCtw <- dcast(PopularX(20),Yr~Nombre,value.var="NameYrTotal", fill=0)
 # write.csv(NCtw,file="Popular20History.csv",row.names = FALSE,fileEncoding = "UTF-8")
+
+
 
 
 ###################################################################
@@ -214,7 +242,8 @@ plot_ly(NCht,
                       fixedrange=FALSE),
          xaxis = list(title="Año",
                       fixedrange=FALSE)) 
-
+#Limpieza
+rm(NCht)
 
 
 ######################################################
@@ -224,38 +253,39 @@ plot_ly(NCht,
 
 
 N100 <- PopularX(100)
-H <- as.matrix(dcast(N100,Yr~Nombre,value.var="Total", fill=0)[,Yr:=NULL])
-HC <- cor(H,H)
+H <- as.matrix(dcast(N100,Yr~Nombre,value.var="NameYrTotal", fill=0)[,Yr:=NULL])
 
 # Se utiliza la 1-correlación como la distancia para el clustering 
 # Correlación -1 es distancia máxima (2)
 # Correlación 1 es distancia mínima (0)
-distances <- as.dist(1-HC)
+distances <- as.dist(1-cor(H,H))
 
 Cluster <- pam(distances,8)
-Cluster$clusinfo
 ClusterTable <- data.table(Nombre =names(Cluster$clustering),
-                           Cluster= as.factor(Cluster$clustering))
+                           Cluster=Cluster$clustering)
 setkey(ClusterTable,Nombre)
 
 
 # Agrega el número de cluster a cada entrada de N100
 N100[,Cluster:=ClusterTable[N100[,Nombre],Cluster]]
-N100[,Cluster:=as.factor(Cluster)]
-ClusterNames <- N100[,.(Nombres=list(.SD[,Nombre])),by=Cluster]
-NamesLists <- ClusterNames[,Nombres]
-NamesLists <- lapply(NamesLists,unique)
-NamesLists <- lapply(NamesLists, paste, collapse=" ")
-NamesLists <- lapply(NamesLists,strwrap,width=30)
-NamesLists <- sapply(NamesLists,paste,collapse="\n")
-ClusterNames <- data.table(Cluster=ClusterNames[,Cluster],Names=NamesLists)
-setkey(ClusterNames,Cluster)
-ClusterChart <- N100[,.(ppmc=sum(ppm)),by="Yr,Cluster"]
-ClusterChart[,Text:=ClusterNames[J(ClusterChart[,Cluster]),Names]]
-ClusterChart[,Text:=as.factor(Text)]
+
+#Plot
+
+# Esta sección es para generar la lista de nombre con un ancho de 30
+# Y que esa lista sea el índice de cada grupo (no el ID)
+
+ClusterNames <- N100[,.(Nombres=list(.SD[,Nombre])),keyby=Cluster]
+ClusterNames[,Nombres:=lapply(Nombres,unique)]
+ClusterNames[,Nombres:=lapply(Nombres,paste,collapse=" ")]
+ClusterNames[,Nombres:=lapply(Nombres,strwrap,width=30)]
+ClusterNames[,Nombres:=sapply(Nombres,paste,collapse="\n")] # Un Vector por cluster
+
+N100 <- N100[,.(ppmc=sum(.SD[,ppm])),keyby="Cluster,Yr"]
+N100[,Text:=ClusterNames[J(N100[,Cluster]),Nombres]]
+N100[,Text:=as.factor(Text)]
 
 
-plot_ly(ClusterChart,
+plot_ly(N100,
         x=~Yr,
         y=~ppmc,
         type="scatter",
@@ -265,9 +295,11 @@ plot_ly(ClusterChart,
         showlegend=FALSE,
         hovertemplate ="Nombres",
         hoverinfo="all") %>% 
-  layout(title="Grupos de Nombres que evolucionaron en conjunto",
+  layout(title="Nombres de Época",
          yaxis = list(title="por millón de nacimientos",
                       fixedrange=FALSE),
          xaxis = list(title="Año",
                       fixedrange=FALSE)) 
 
+#Limpieza
+rm(N100,H,distances,Cluster,ClusterTable,ClusterNames)
