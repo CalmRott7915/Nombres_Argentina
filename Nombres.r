@@ -27,6 +27,10 @@ setkey(NC,ID)
 # Variables comunes a varios ejemplos             #
 ###################################################
 
+# Años mínimos y máximos usando data.table
+YrMin <- NC[,min(Yr)]
+YrMax <- NC[,max(Yr)]
+
 # Total de Inscriptos en un año
 TI <- NC[,.(YrTotal=sum(N)),keyby=Yr]     
 
@@ -36,7 +40,29 @@ NSp[,`:=`(ppm = NameYrTotal*1e6/TI[J(NSp[,Yr]),YrTotal],
           YrTotal =TI[J(NSp[,Yr]),YrTotal])]
 
 # Partes por millón de Nombres Completos
-NC[,ppm:=N*1e6/TI[J(NC[,Yr]),YrTotal]]
+NC[,`:=`(ppm=N*1e6/TI[J(NC[,Yr]),YrTotal],
+    YrTotal =TI[J(NC[,Yr]),YrTotal])]
+
+# Clases: El año Yr + el Año siguiente: 
+# Ejemplo Yr= 1980 => Clase Julio 1980 a Junio 1981
+
+  # Nombres Simples
+  # Datos del Año Siguiente
+  # Incompleto/Documentar
+  NSp[,`:=`(ppm_1=shift(ppm,type="lead",fill=0),
+           YrTotal_1=shift(YrTotal,type="lead",fill=0),
+           NameYrTotal_1=shift(NameYrTotal,type="lead",fill=0),
+           Nombre_1=shift(Nombre,type="lead",fill=0),
+           Yr_1 = shift(Yr,type="lead",fill=YrMax)
+           )]
+  
+  NoNext <- NSp[,Nombre!=Nombre_1|Yr_1!=Yr+1]
+  
+  NSp[NoNext, `:=`(ppm_1=0,
+                  YrTotal_1=TI[J(pmin(NSp[NoNext,Yr]+1,YrMax)),
+                              YrTotal],
+                  NameYrTotal_1=0)]
+  
 
 
 #####################################################
@@ -207,6 +233,11 @@ PopularX <- function(N_Popular, exclude=c("Del","Los","De")){
 ############################################################
 # NCtw <- dcast(PopularX(20),Yr~Nombre,value.var="NameYrTotal", fill=0)
 # write.csv(NCtw,file="Popular20History.csv",row.names = FALSE,fileEncoding = "UTF-8")
+
+
+############################################################
+#   Probabilidad
+############################################################
 
 
 

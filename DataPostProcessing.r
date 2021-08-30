@@ -24,12 +24,9 @@ HNL <- rbindlist(list(HNL,HNP))
 HNL[,ID:=1:.N]
 setcolorder(HNL,c("ID","Nombre","N","Yr"))
 
-# Incompleto
-# Todas los Nombresa Mayusculas la primera letra
+
+# Todos los Nombresa Mayusculas la primera letra
 HNL[,Nombre:=stri_trans_totitle(Nombre)]
-
-
-
 
 
 fwrite(x=HNL,
@@ -40,34 +37,84 @@ fwrite(x=HNL,
 
 # Genera el listado de nombres individuales
 
-# Dividir en los espacios
-NamesSplit <- data.table(stri_split_fixed(HNL[,Nombre],pattern=" ",simplify = TRUE))
+## Nota. Código original donde la operación de melt se hace en un sólo paso
+## Funciona bien pero requiere mucha memoria, sobre todo porque genera tantas
+## Columnas como la cantidad de nombres simples en el nombre más largo (11),
+## Con lo cual se generan más de 100 millones de entradas
+   # 
+   # # Dividir en los espacios
+   # NamesSplit <- data.table(stri_split_fixed(HNL[,Nombre],pattern=" ",simplify = TRUE))
+   # 
+   # # Agrega el ID, Número y Año
+   # NamesSplit[,`:=`(ID=1:.N,N=HNL[,N],Yr=HNL[,Yr])]
+   # 
+   # 
+   # #Lo pasa al formato largo
+   # NamesSplit <- melt(NamesSplit,
+   #                    id.vars=c("ID","N","Yr"),
+   #                    variable.name="P",
+   #                    value.name="Nombre")[,P:=NULL]
+   # NamesSplit <- NamesSplit[Nombre!=""]
+   # 
+   # setcolorder(NamesSplit,c("ID","Nombre","N","Yr"))
+   # 
+   # # Graba
+   # fwrite(x=NamesSplit,
+   #        file="Nombres_Simples.csv",
+   #        eol="\n",
+   #        row.names=FALSE)
 
-# Agrega el ID, Número y Año
-NamesSplit[,`:=`(ID=1:.N,N=HNL[,N],Yr=HNL[,Yr])]
 
-#Lo pasa el formato largo
-NamesSplit <- melt(NamesSplit,
-                   id.vars=c("ID","N","Yr"),
-                   variable.name="P",
-                   value.name="Nombre")[,P:=NULL]
-NamesSplit <- NamesSplit[Nombre!=""]
+# El código de abajo es lo mismo, pero leyendo un grupo de entradas por vez
 
-setcolorder(NamesSplit,c("ID","Nombre","N","Yr"))
 
-# Graba                                        
-fwrite(x=NamesSplit,
+# Inicializa las columnas
+fwrite(x=list("ID","Nombre","N","Yr"),
        file="Nombres_Simples.csv",
        eol="\n",
-       row.names=FALSE)
+       row.names=FALSE,
+       col.names=FALSE,
+       append=FALSE
+       )
+
+NRows <- nrow(HNL)
+ChunkSize <- 100000L
+NChunks <- NRows%/%ChunkSize + sign(NRows%%ChunkSize)
+
+for (i in 0:(NChunks-1)){
+   
+   # Hace la division de nombres para el chunk actual (iRange)
+   iRange <- (i*ChunkSize+1):min(NRows,(i+1)*ChunkSize)
+   NamesSplit <- data.table(stri_split_fixed(HNL[iRange,Nombre],pattern=" ",simplify = TRUE))
+   NamesSplit[,`:=`(ID=iRange,N=HNL[iRange,N],Yr=HNL[iRange,Yr])]
+
+
+   #Lo pasa al formato largo
+   NamesSplit <- melt(NamesSplit,
+                      id.vars=c("ID","N","Yr"),
+                      variable.name="P",
+                      value.name="Nombre")[,P:=NULL]
+   NamesSplit <- NamesSplit[Nombre!=""]
+   setcolorder(NamesSplit,c("ID","Nombre","N","Yr"))
+
+   # Agrega al Archivo
+   fwrite(NamesSplit,
+          file="Nombres_Simples.csv",
+          eol="\n",
+          row.names=FALSE,
+          col.names=FALSE,
+          append=TRUE
+   )
+   
+} # Fin lazo de Chunks
+
 
 
 # Limpia los archivos intermedios
  if (file.exists("Nombres-Limpio-R.csv")){
    file.remove("Nombres-Limpio-R.csv")
  }
-     
+
  if (file.exists("Nombres-Problema-R.csv")){
    file.remove("Nombres-Problema-R.csv")
  }
- 
