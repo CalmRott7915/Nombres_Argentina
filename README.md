@@ -15,22 +15,34 @@ https://infra.datos.gob.ar/catalog/otros/dataset/2/distribution/2.1/download/his
 Es un dataset de más de nueve millones de registros. Definitivamente, no entra en un Excel. :smile:
 
 
-## Uso.
+## Uso:
+Hay dos formas de generar el data set para su posterior uso:
+ - Con sed y awk: es algo más lento, pero dado que el procesamiento es línea por línea no necesita una gran cantidad de memoria.
+ - Con R. Es más rápido, requiere muchos menos pasos manuales, se puede ejecutar completamente en Windows sin necesidad de un ambiente Linux, pero requiere una cantidad considerable (hasta 5Gb para poder ejecutarse). Se necesita una computadora con al menos 12 Gb de RAM.
+
+Ambos producen resultados prácticamente iguales (difieren en una o dos entradas en 9 millones)
+
+
+### Pasos comunes para ambos
 
 1) Clonar el repositorio (o bajarlo)
 2) Bajar una copia del dataset del sitio del Gobierno y descomprimirla. Es un archivo csv llamado "historico-nombres.csv"
+
+
+### Con Sed y Awk
+
 3) Ejecutar:
 
     ```` bash
     sed -f Sed_Script.txt historico-nombres.csv|awk -f Pre_awk.txt
     ````
 
-Demora unos minutos. Son varias sustituciones con expresiones regulares sobre más de nueve millones de registros. Con esto se van a generar dos archivos. Uno llamado "Nombres-Limpio.csv" que tiene todos los nombres que se pudieron corregir con el script y otro llamado "Nombres-Problema.csv" que tiene 85 entradas que no se solucionaron y que hay que corregir a mano con un editor de texto.
+Demora unos minutos. Son varias sustituciones con expresiones regulares sobre más de nueve millones de registros. Con esto se van a generar dos archivos. Uno llamado "Nombres-Limpio-Sed.csv" que tiene todos los nombres que se pudieron corregir con el script y otro llamado "Nombres-Problema-Sed.csv" que tiene 85 entradas que no se solucionaron y que hay que corregir a mano con un editor de texto.
 
-4) Corregir a mano el archivo "Nombres-Problema.csv" y guardarlo como "Nombres-Problema-Corregido.csv". Luego volver a unir y limpiar. Hay una copia en este repositorio de los 85 nombres corregidos.
+4) Corregir a mano el archivo "Nombres-Problema-Sed.csv" y guardarlo como "Nombres-Problema-Corregido-Sed.csv". Luego volver a unir y limpiar. Hay una copia en este repositorio de éste archivo de nombres corregidos.
 
     ```` bash
-    cat Nombres-Problema-Corregido.csv >> Nombres-Limpio.csv && mv Nombres-Limpio.csv Nombres.csv && rm Nombres-Problema.csv
+    cat Nombres-Problema-Corregido-Sed.csv >> Nombres-Limpio-Sed.csv && mv Nombres-Limpio-Sed.csv Nombres.csv && rm Nombres-Problema-Sed.csv
     ````
 
 
@@ -40,10 +52,26 @@ Demora unos minutos. Son varias sustituciones con expresiones regulares sobre m�
     awk -f Post_awk.txt Nombres.csv && rm Nombres.csv
     ````
 
-Ya estamos en condiciones de importar los datos a R y comenzar a hacer algunas cosas. En el archivo "Nombres.r" hay varios ejemplos de uso.
+Se generan los archivos "Nombres_Completos.csv" y "Nombres_Simples.csv"
+
+
+Ya estamos en condiciones de importar los datos a R y analizarlos. En el archivo "Nombres.r" hay varios ejemplos de uso.
 
 
 Nota: ésto fue desarrolado con las utilidades de Ubuntu en Windows Subsystem for Linux. No están probados en ninguna otra distribución.
+
+
+
+### Con R
+
+3) Ejecutar el archivo "RawDataProcessing.r". Va a generar dos archivos "Nombres-Limpio-R.csv" y "Nombres-Problema-R.csv"
+
+4) Corregir a mano el archivo "Nombres-Problema-R.csv" y guardarlo como "Nombres-Problema-Corregido-R.csv". Es el único paso manual a realizar
+
+5) Ejecutar el archivo "DataPostProcessing.r". Une todo, genera los archivos "Nombres_Completos.csv" y "Nombres_Simples.csv" y borra los intermedios.
+
+Ya estamos en condiciones de importar los datos a R y analizarlos. En el archivo "Nombres.r" hay varios ejemplos de uso.
+
 
 
 ## Problemas del Sitio y los Datos
