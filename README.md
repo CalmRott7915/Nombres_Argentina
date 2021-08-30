@@ -17,10 +17,11 @@ Es un dataset de más de nueve millones de registros. Definitivamente, no entra 
 
 ## Uso:
 Hay dos formas de generar el data set para su posterior uso:
- - Con las utilidades linux sed y awk: es algo más lento, pero dado que el procesamiento es línea por línea no necesita una gran cantidad de memoria. Necesita Linux.
- - Con R. Es más rápido, se puede ejecutar completamente en Windows sin necesidad de un ambiente Linux, pero requiere algo más de memoria RAM (3 Gb + la memoria de R + memoria del sistema operativo). Es posible que no funcione en ninguna máquina con menos de 8 Gb de RAM.
 
-Ambos producen resultados prácticamente iguales.
+ - Con las utilidades linux sed y awk: es algo más lento, pero dado que el procesamiento es línea por línea no necesita una gran cantidad de memoria. Necesita Linux. Hay algunos nombres repetidos, y esta forma de procesar los datos no lo soluciona. Hay que hacerlo al utilizar los datos
+
+ - Con R. Es más rápido, se puede ejecutar completamente en Windows sin necesidad de un ambiente Linux, pero requiere algo más de memoria RAM (3 Gb + la memoria de R + memoria del sistema operativo). Es posible que no funcione en ninguna máquina con menos de 8 Gb de RAM. Consolida los nombres duplicados antes de guardar.
+
 
 
 ### Pasos comunes para ambos

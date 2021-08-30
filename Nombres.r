@@ -12,16 +12,20 @@ library(plotly)
 library(cluster)
 
 
+######################################################################
+# TODO: Estandarizar nombre de variables                             #
+#       Eliminar ppm y usar cantidades directamente                  #
+######################################################################
+
+
 # Carga los archivos como data.table ####
 
 NC <- fread("Nombres_Completos.csv",
-            encoding="UTF-8")
+            encoding="UTF-8",key=c("Nombre","Yr"))
 
 NS <- fread("Nombres_Simples.csv",
-            encoding="UTF-8")
+            encoding="UTF-8",key="Nombre")
 
-setkey(NS, Nombre)
-setkey(NC,ID)
 
 ###################################################
 # Variables comunes a varios ejemplos             #
@@ -31,8 +35,12 @@ setkey(NC,ID)
 YrMin <- NC[,min(Yr)]
 YrMax <- NC[,max(Yr)]
 
-# Total de Inscriptos en un año
-TI <- NC[,.(YrTotal=sum(N)),keyby=Yr]     
+# Total de Inscriptos y Nombres simples en años y clase
+TI <- NC[,.(YrTotal=sum(N)),keyby=Yr]
+TI[,YrSimple:=NS[,.(YrSimple=sum(N)),keyby=Yr][,YrSimple]]
+TI[,ClassTotal:=frollsum(YrTotal,n=2,align="left",fill=TI[J(YrMax),YrTotal])]
+TI[,ClassSimple:=frollsum(YrSimple,n=2,align="left",fill=TI[J(YrMax),YrSimple])]
+
 
 # Partes por millón de Nombres simples
 NSp <- NS[,.(NameYrTotal=sum(N)),keyby="Nombre,Yr"]
@@ -43,27 +51,81 @@ NSp[,`:=`(ppm = NameYrTotal*1e6/TI[J(NSp[,Yr]),YrTotal],
 NC[,`:=`(ppm=N*1e6/TI[J(NC[,Yr]),YrTotal],
     YrTotal =TI[J(NC[,Yr]),YrTotal])]
 
-# Clases: El año Yr + el Año siguiente: 
-# Ejemplo Yr= 1980 => Clase Julio 1980 a Junio 1981
+#####################################################
+# Clases: El año Yr + el Año siguiente:             #
+# Ejemplo Yr= 1980 => Clase Julio 1980 a Junio 1981 #
+#####################################################
 
-  # Nombres Simples
-  # Datos del Año Siguiente
-  # Incompleto/Documentar
-  NSp[,`:=`(ppm_1=shift(ppm,type="lead",fill=0),
-           YrTotal_1=shift(YrTotal,type="lead",fill=0),
-           NameYrTotal_1=shift(NameYrTotal,type="lead",fill=0),
-           Nombre_1=shift(Nombre,type="lead",fill=0),
-           Yr_1 = shift(Yr,type="lead",fill=YrMax)
-           )]
-  
-  NoNext <- NSp[,Nombre!=Nombre_1|Yr_1!=Yr+1]
-  
-  NSp[NoNext, `:=`(ppm_1=0,
-                  YrTotal_1=TI[J(pmin(NSp[NoNext,Yr]+1,YrMax)),
-                              YrTotal],
-                  NameYrTotal_1=0)]
-  
+# Nombres Completos
 
+    # Para los nombres que no aparecen el año anterior, se crea una entrada con valores en Cero para la cantidad
+    NCNoAnt <- NC[Yr%in%(YrMin+1):YrMax&
+                    (Nombre!=shift(Nombre,type="lag")|(Yr-1)!=shift(Yr,type="lag"))]
+    NCNoAnt[,`:=`(ID=0,Yr=Yr-1,N=0,ppm=0)]
+    NCNoAnt[,YrTotal:=TI[J(NCNoAnt[,Yr]),YrTotal]]
+    
+    NC <- rbindlist(list(NC,NCNoAnt))
+    rm(NCNoAnt)
+    setkey(NC,Nombre,Yr)
+  
+    # Copia los datos del año siguiente
+    NC[,`:=`(YrTotal_1 = shift(YrTotal,type="lead",fill=0),
+              N_1      = shift(N,type="lead",fill=0),
+              Nombre_1 = shift(Nombre,type="lead",fill=0),
+              Yr_1     = shift(Yr,type="lead",fill=YrMax)
+              )]
+    
+    # Los nombres que no aparecen al año siguiente sólo se promedia con el total de los dos años como denominador
+    NC[,NoNext:=(Nombre!=Nombre_1|Yr_1!=Yr+1)]
+  
+    NC[NoNext==TRUE, `:=`(YrTotal_1 = TI[J(pmin(NC[NoNext==TRUE,Yr]+1,YrMax)),YrTotal],
+                          N_1       = 0)]
+    
+    
+    # Calcula los totales de la Clase
+    NC[,`:=`(ClassTotal = YrTotal+YrTotal_1,
+             NClass     = N +N_1)]
+    
+    # Elimina las Columnas Intermedias y calcula ppm de la Clase
+    NC[,`:=`(YrTotal_1=NULL,N_1=NULL,Nombre_1=NULL,Yr_1=NULL,NoNext=NULL,
+              cppm =NClass*1e6/ClassTotal )]
+
+    setkey(NC,ID)
+
+# Nombres Simples
+
+    # Para los nombres que no aparecen el año anterior, se crea una entrada con valores en Cero para la cantidad
+    NSNoAnt <- NSp[Yr%in%(YrMin+1):YrMax&
+                    (Nombre!=shift(Nombre,type="lag")|(Yr-1)!=shift(Yr,type="lag"))]
+    NSNoAnt[,`:=`(Yr=Yr-1,NameYrTotal=0,ppm=0)]
+    NSNoAnt[,YrTotal:=TI[J(NSNoAnt[,Yr]),YrTotal]]
+    
+    NSp <- rbindlist(list(NSp,NSNoAnt))
+    rm(NSNoAnt)
+    setkey(NSp,Nombre,Yr)
+    
+  
+    # Copia los datos del año siguiente
+    NSp[,`:=`(YrTotal_1     = shift(YrTotal,type="lead",fill=0),
+              NameYrTotal_1 = shift(NameYrTotal,type="lead",fill=0),
+              Nombre_1      = shift(Nombre,type="lead",fill=0),
+              Yr_1          = shift(Yr,type="lead",fill=YrMax)
+              )]
+    
+    # Los nombres que no aparecen al año siguiente sólo se promedia con el total de los dos años
+    NSp[,NoNext:=(Nombre!=Nombre_1|Yr_1!=Yr+1)]
+    
+    NSp[NoNext==TRUE, `:=`(YrTotal_1     = TI[J(pmin(NSp[NoNext==TRUE,Yr]+1,YrMax)),YrTotal],
+                           NameYrTotal_1 = 0)]
+    
+    # Calcula los totales de la Clase
+    NSp[,`:=`(ClassTotal = YrTotal+YrTotal_1,
+              NameClassTotal = NameYrTotal+NameYrTotal_1)]
+    
+    # Elimina las Columnas Intermedias y calcula ppm de la Clase
+    NSp[,`:=`(YrTotal_1=NULL,NameYrTotal_1=NULL,Nombre_1=NULL,Yr_1=NULL,NoNext=NULL,
+              cppm =NameClassTotal*1e6/ClassTotal )]
+    
 
 #####################################################
 # Un Conjunto de Nombres Simples (Suma de Todos) ####
@@ -236,11 +298,75 @@ PopularX <- function(N_Popular, exclude=c("Del","Los","De")){
 
 
 ############################################################
-#   Probabilidad
+#   Probabilidad de haber sido de una clase particular     #
+#   Si tuviste compañeros llamados ....                    #
 ############################################################
 
 
+Completos <- c()
+# Primero las fracciones de todos los nombres como columnas, después los multiplica y se queda con la multiplicación 
+# y al final pone en el listado de total de años siendo cero donde no hay ninguno
 
+if (length(Completos)==0){
+  ProbC <- data.table(Yr=YrMin:YrMax,ProbC=1,key="Yr")
+}else{
+  ProbC <- dcast(NC[Nombre%in%Completos],Yr~Nombre,fill=0, fun=sum,value.var="NClass")
+  ProbC <- ProbC[,ProbC:=apply(.SD,1,prod),keyby=Yr][,.(Yr,ProbC)]
+  ProbC <- merge(TI,ProbC,all.x=TRUE,by="Yr")[is.na(ProbC),ProbC:=0]
+  ProbC[,ProbC:=ProbC*ClassTotal^(-length(Completos))]
+}
+
+Simples <- c("Kevin","Brian","Jonatan",
+             "Yanina","Ezequiel","Melinda","Tamara",
+             "Emiliano","Iván")
+
+if (length(Simples)==0){
+  ProbS <- data.table(Yr=YrMin:YrMax,ProbS=1,key="Yr")
+}else{
+  ProbS <- dcast(NSp[Nombre%in%Simples],Yr~Nombre,fill=0, fun=sum,value.var="NameClassTotal")
+  ProbS <- ProbS[,ProbS:=apply(.SD,1,prod),keyby=Yr][,.(Yr,ProbS)]
+  ProbS <- merge(TI,ProbS,all.x=TRUE,by="Yr")[is.na(ProbS),ProbS:=0]
+  ProbS[,ProbS:=ProbS*ClassSimple^(-length(Simples))]
+}
+
+
+## Bayes
+
+###########################################################
+# TODO: Hay un error conceptual en dividir por total de   #
+# nombres simples para calcular la probabilidad y despues #
+# ponderlos por el total de nombres completos. El efecto  #
+# es mínimo porque la relación Nombres Simples / Nombre   #
+# completo se mantiene históricamente en alrededor de 2   #
+###########################################################
+
+#P (A|B) = ProbT
+ProbT <- merge(ProbS,
+               ProbC[,`:=`(YrTotal =NULL,
+                           YrSimple=NULL,
+                           ClassTotal=NULL,
+                           ClassSimple=NULL)
+                     ],
+               by="Yr")[,ProbT:=ProbS*ProbC]
+
+#P(A) ó probabilidad de haber tenido esa combinación en el total de los años
+PA <- sum(ProbT[,ProbT*ClassTotal/sum(.SD$ClassTotal)])
+
+# P(B) ó probabilidad de que un nombre al azar sea de una clase en particular
+PB <- ProbT[,ClassTotal/sum(.SD$ClassTotal)]
+
+# Probabilidades Porcentuales
+PBA <- ProbT[,.(Yr=Yr,PBA=ProbT*PB*100/PA)]
+
+# Imprime los años que suman el 95%
+setorder(PBA,PBA)[,Acum:=cumsum(.SD$PBA)]
+setorder(PBA,Yr)
+ToPrint <- PBA[Acum>0.05,paste("Clase ",Yr,"-",Yr+1,":",signif(PBA,digits=3),"%\n",sep="")]
+ToPrint <- paste("95% de Probabilidades en los años:\n", paste(ToPrint,collapse=""),sep="")
+cat(ToPrint)
+
+#Limpieza
+rm(Completos, Simples, ProbC, ProbS,ProbT, PA, PB, PBA, ToPrint)
 
 ###################################################################
 # Gráfico de evolución de los nómbres más populares               #
@@ -291,7 +417,8 @@ H <- as.matrix(dcast(N100,Yr~Nombre,value.var="NameYrTotal", fill=0)[,Yr:=NULL])
 # Correlación 1 es distancia mínima (0)
 distances <- as.dist(1-cor(H,H))
 
-Cluster <- pam(distances,8)
+# Divide en N Clusters
+Cluster <- pam(distances,11)
 ClusterTable <- data.table(Nombre =names(Cluster$clustering),
                            Cluster=Cluster$clustering)
 setkey(ClusterTable,Nombre)
@@ -326,8 +453,8 @@ plot_ly(N100,
         showlegend=FALSE,
         hovertemplate ="Nombres",
         hoverinfo="all") %>% 
-  layout(title="Nombres de Época",
-         yaxis = list(title="por millón de nacimientos",
+  layout(title="Nombres por Época en Argentina",
+         yaxis = list(title="Por millón de nacimientos",
                       fixedrange=FALSE),
          xaxis = list(title="Año",
                       fixedrange=FALSE)) 

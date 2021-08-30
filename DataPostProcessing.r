@@ -19,6 +19,11 @@ HNP <- fread("Nombres-Problema-Corregido-R.csv",
 
 HNL <- rbindlist(list(HNL,HNP))
 
+setkey(HNL,Nombre,Yr)
+
+
+# Si en las correcciones o el original hubo algun nombre repetido 
+HNL <- HNL[,.(N=sum(N)),by="Nombre,Yr"]
 
 # Agrega un ID a cada fila de nombre
 HNL[,ID:=1:.N]
