@@ -303,7 +303,7 @@ PopularX <- function(N_Popular, exclude=c("Del","Los","De")){
 ############################################################
 
 
-Completos <- c()
+Completos <- c("Nestor Fabio Damian")
 # Primero las fracciones de todos los nombres como columnas, después los multiplica y se queda con la multiplicación 
 # y al final pone en el listado de total de años siendo cero donde no hay ninguno
 
@@ -316,9 +316,8 @@ if (length(Completos)==0){
   ProbC[,ProbC:=ProbC*ClassTotal^(-length(Completos))]
 }
 
-Simples <- c("Kevin","Brian","Jonatan",
-             "Yanina","Ezequiel","Melinda","Tamara",
-             "Emiliano","Iván")
+Simples <- c("Gabriela", "Silvina", "Daniel", "Verónica",
+             "Laura", "Cecilia", "Nestor", "Ricardo", "Karina", "Carina" )
 
 if (length(Simples)==0){
   ProbS <- data.table(Yr=YrMin:YrMax,ProbS=1,key="Yr")
@@ -358,11 +357,11 @@ PB <- ProbT[,ClassTotal/sum(.SD$ClassTotal)]
 # Probabilidades Porcentuales
 PBA <- ProbT[,.(Yr=Yr,PBA=ProbT*PB*100/PA)]
 
-# Imprime los años que suman el 95%
+# Imprime los años que suman el 90%
 setorder(PBA,PBA)[,Acum:=cumsum(.SD$PBA)]
 setorder(PBA,Yr)
-ToPrint <- PBA[Acum>0.05,paste("Clase ",Yr,"-",Yr+1,":",signif(PBA,digits=3),"%\n",sep="")]
-ToPrint <- paste("95% de Probabilidades en los años:\n", paste(ToPrint,collapse=""),sep="")
+ToPrint <- PBA[Acum>10,paste("Clase ",Yr,"-",Yr+1,":",signif(PBA,digits=3),"%\n",sep="")]
+ToPrint <- paste("90% de Probabilidades en los años:\n", paste(ToPrint,collapse=""),sep="")
 cat(ToPrint)
 
 #Limpieza
